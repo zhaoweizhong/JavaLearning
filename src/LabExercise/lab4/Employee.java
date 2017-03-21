@@ -30,9 +30,7 @@ public class Employee {
     public String getLastName(){
         return lastName;
     }
-    public double getMonthlySalary(){
-        return monthlySalary;
-    }
+    public double getMonthlySalary(){ return monthlySalary; }
 
     public void display(){
         System.out.println("First Name: " + getFirstName());
