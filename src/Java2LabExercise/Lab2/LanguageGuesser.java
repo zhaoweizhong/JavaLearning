@@ -40,6 +40,7 @@ public class LanguageGuesser {
                 read_txt(fileEntry.getPath());
             }
         }
+        //TODO Finish the language loading method
     }
 
     private static ArrayList read_txt(String txt_src) {
