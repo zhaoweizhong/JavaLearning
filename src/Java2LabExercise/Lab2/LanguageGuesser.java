@@ -5,23 +5,53 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Properties;
 
 public class LanguageGuesser {
-    private static String STOP_WORDS_DIR = null;
+    private static String STOP_WORDS_DIR;
     public static void main(String[] args) {
         if (args[0].length() == 0) {
             System.out.println("Nothing Inputted.");
             System.exit(1);
         }
-        if (!initialize()) {
+        if (!init()) {
             System.out.println("Config File Required.");
             System.exit(1);
         }
-
+        ArrayList<String> langList = read_lang(new File(STOP_WORDS_DIR));
+        ArrayList<String> resultName = new ArrayList<>();
+        ArrayList<Integer> resultRank = new ArrayList<>();
+        ArrayList<String> textArray = read_txt(args[0]);
+        String text = "";
+        for (String textLine:textArray) {
+            text = text + " " + textLine;
+        }
+        for (int i = 0; i < langList.size(); i++) {
+            ArrayList<String> lang = new ArrayList<>();
+            //lang.add(langList.get(i));
+            resultName.add(langList.get(i));
+            int start = Integer.parseInt(langList.get(i + 1));
+            int stop = Integer.parseInt(langList.get(i + 2));
+            int j = start;
+            while (true) {
+                lang.add(langList.get(j));
+                if (j == stop) {
+                    i = stop + 1;
+                    break;
+                }
+                j++;
+            }
+            int rank = 0;
+            for (String str:lang) {
+                rank = rank + getOccur(text, str);
+            }
+            resultRank.add(rank);
+        }
+        System.out.println(resultName.get(resultRank.indexOf(Collections.max(resultRank))));
     }
 
-    private static boolean initialize() {
+    private static boolean init() {
         Properties properties = new Properties();
         try {
             properties.load(new FileInputStream("./language.cnf"));
@@ -32,15 +62,19 @@ public class LanguageGuesser {
         return true;
     }
 
-    private static void read_lang(final File folder) {
+    private static ArrayList read_lang(final File folder) {
+        ArrayList<String> langList = new ArrayList<>();
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
                 read_lang(fileEntry);
             } else if (fileEntry.getName().endsWith(".txt")) {
-                read_txt(fileEntry.getPath());
+                langList.add(fileEntry.getName().replace(".txt", ""));
+                langList.add(String.valueOf(langList.size() + 2));
+                langList.add(String.valueOf(read_txt(fileEntry.getPath()).size() + langList.size() - 1));
+                langList.addAll(read_txt(fileEntry.getPath()));
             }
         }
-        //TODO: Finish the language loading method
+        return langList;
     }
 
     private static ArrayList read_txt(String txt_src) {
@@ -63,5 +97,15 @@ public class LanguageGuesser {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static int getOccur(String src, String find){
+        int o = 0;
+        int index=-1;
+        while((index=src.indexOf(find,index))>-1){
+            ++index;
+            ++o;
+        }
+        return o;
     }
 }
